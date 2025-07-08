@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기업개황 검색</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .dart-search-container {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dart-main {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .dart-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .dart-header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .dart-header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .dart-api-status {
+            padding: 15px 30px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .dart-api-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .dart-api-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .dart-api-status.checking {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .dart-search-section {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .dart-search-container-inner {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .dart-search-input {
+            flex: 1;
+            padding: 15px 25px;
+            border: 2px solid #e0e6ed;
+            border-radius: 50px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .dart-search-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .dart-search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .dart-search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        .dart-search-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .dart-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 80px;
+            background: white;
+            border: 1px solid #e0e6ed;
+            border-radius: 10px;
+            margin-top: 5px;
+            display: none;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .dart-suggestion-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dart-suggestion-item:hover {
+            background: #f8f9fa;
+        }
+
+        .dart-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .dart-suggestion-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .dart-suggestion-code {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            background: #ecf0f1;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .dart-results-section {
+            padding: 30px;
+        }
+
+        .dart-company-overview {
+            background: linear-gradient(135deg, #e8f8f5, #fef9e7);
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 5px solid #27ae60;
+            margin-bottom: 20px;
+        }
+
+        .dart-company-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .dart-company-name {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .dart-company-name-eng {
+            font-size: 1.1em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .dart-stock-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .dart-stock-code {
+            background: #3498db;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .dart-company-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .dart-detail-group {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(52, 152, 219, 0.1);
+        }
+
+        .dart-detail-item {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+
+        .dart-detail-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .dart-detail-label {
+            min-width: 120px;
+            font-weight: bold;
+            color: #34495e;
+            font-size: 0.95em;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .dart-detail-value {
+            color: #2c3e50;
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .dart-detail-value a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .dart-detail-value a:hover {
+            text-decoration: underline;
+        }
+
+        .dart-loading {
+            text-align: center;
+            padding: 60px;
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .dart-loading::after {
+            content: '';
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: dart-spin 1s linear infinite;
+            margin-left: 15px;
+        }
+
+        @keyframes dart-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .dart-error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .dart-empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .dart-empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #95a5a6;
+        }
+
+        .dart-empty-state p {
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+
+        .dart-tips {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .dart-tips h4 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .dart-tips ul {
+            margin-left: 20px;
+            line-height: 1.6;
+        }
+
+        .dart-tips li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            .dart-search-container-inner {
+                flex-direction: column;
+            }
+            
+            .dart-search-input {
+                border-radius: 25px;
+            }
+            
+            .dart-suggestions {
+                right: 0;
+            }
+            
+            .dart-company-title {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .dart-stock-info {
+                flex-wrap: wrap;
+            }
+            
+            .dart-company-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .dart-detail-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .dart-detail-label {
+                margin-bottom: 5px;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dart-search-container">
+        <div class="dart-main">
+            <div class="dart-header">
+                <h1>🏢 기업개황 검색</h1>
+                <p>실제 DART API를 통한 기업정보 조회</p>
+            </div>
+
+            <div class="dart-api-status checking" id="dartApiStatus">
+                ⏳ API 연결 상태 확인 중...
+            </div>
+
+            <div class="dart-search-section">
+                <div class="dart-search-container-inner">
+                    <input type="text" id="dartCompanySearch" class="dart-search-input" 
+                           placeholder="회사명을 입력하세요 (예: 삼성전자, 네이버, 카카오)" 
+                           onkeyup="handleDartSearchInput(event)">
+                    <button class="dart-search-btn" onclick="searchDartCompany()" id="dartSearchBtn">
+                        🔍 검색
+                    </button>
+                    <div class="dart-suggestions" id="dartSuggestions"></div>
+                </div>
+
+                <div class="dart-tips">
+                    <h4>💡 검색 가이드</h4>
+                    <ul>
+                        <li><strong>정확한 회사명</strong>을 입력하세요 (예: "삼성전자", "LG전자")</li>
+                        <li><strong>자동완성</strong> 목록에서 원하는 회사를 선택하세요</li>
+                        <li><strong>상장회사</strong>의 기업개황 정보를 실시간으로 제공합니다</li>
+                        <li>검색 결과에서 <strong>홈페이지 링크</strong>를 클릭하여 회사 사이트로 이동할 수 있습니다</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="dart-results-section" id="dartResults">
+                <div class="dart-empty-state">
+                    <h3>🔍 검색 대기 중</h3>
+                    <p>위에서 회사명을 입력하여 기업개황 정보를 조회해보세요.<br>
+                    실제 DART API를 통해 최신 정보를 제공합니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 기본 설정
+        const DART_API_BASE_URL = '/.netlify/functions';
+        let dartSelectedCompany = null;
+
+        // 페이지 로드시 API 상태 확인
+        window.addEventListener('load', function() {
+            checkDartAPIStatus();
+        });
+
+        // API 상태 확인
+        async function checkDartAPIStatus() {
+            const statusDiv = document.getElementById('dartApiStatus');
+            try {
+                // 테스트 요청으로 API 상태 확인
+                const response = await fetch(`${DART_API_BASE_URL}/search?query=test`);
+                
+                if (response.ok) {
+                    statusDiv.className = 'dart-api-status connected';
+                    statusDiv.textContent = '✅ DART API 연결됨 - 실시간 데이터 제공 중';
+                } else if (response.status === 404) {
+                    throw new Error('Functions 배포되지 않음');
+                } else {
+                    throw new Error('API 연결 실패');
+                }
+            } catch (error) {
+                statusDiv.className = 'dart-api-status error';
+                if (error.message.includes('Functions')) {
+                    statusDiv.textContent = '❌ Netlify Functions가 배포되지 않았습니다';
+                } else {
+                    statusDiv.textContent = '❌ API 연결 실패 - 환경변수 또는 Functions를 확인해주세요';
+                }
+            }
+        }
+
+        // 검색 입력 처리
+        async function handleDartSearchInput(event) {
+            const query = event.target.value.trim();
+            
+            if (event.key === 'Enter') {
+                searchDartCompany();
+                return;
+            }
+            
+            if (query.length >= 2) {
+                await showDartSuggestions(query);
+            } else {
+                hideDartSuggestions();
+            }
+        }
+
+        // 자동완성 표시
+        async function showDartSuggestions(query) {
+            try {
+                const response = await fetch(`${DART_API_BASE_URL}/search?query=${encodeURIComponent(query)}`);
+                if (!response.ok) throw new Error('검색 실패');
+                
+                const companies = await response.json();
+                const suggestionsDiv = document.getElementById('dartSuggestions');
+                
+                if (companies.length > 0) {
+                    suggestionsDiv.innerHTML = companies.map(company => 
+                        `<div class="dart-suggestion-item" onclick="selectDartCompany('${company.corp_name}', '${company.corp_code}', '${company.stock_code || ''}')">
+                            <span class="dart-suggestion-name">${company.corp_name}</span>
+                            <span class="dart-suggestion-code">${company.stock_code || ''}</span>
+                        </div>`
+                    ).join('');
+                    suggestionsDiv.style.display = 'block';
+                } else {
+                    hideDartSuggestions();
+                }
+            } catch (error) {
+                console.error('자동완성 오류:', error);
+                hideDartSuggestions();
+            }
+        }
+
+        // 자동완성 숨기기
+        function hideDartSuggestions() {
+            document.getElementById('dartSuggestions').style.display = 'none';
+        }
+
+        // 회사 선택
+        function selectDartCompany(name, code, stock) {
+            document.getElementById('dartCompanySearch').value = name;
+            dartSelectedCompany = { name, code, stock };
+            hideDartSuggestions();
+        }
+
+        // 회사 검색 (실제 DART API 호출)
+        async function searchDartCompany() {
+            const companyName = document.getElementById('dartCompanySearch').value.trim();
+            const resultsDiv = document.getElementById('dartResults');
+            const searchBtn = document.getElementById('dartSearchBtn');
+
+            if (!companyName) {
+                resultsDiv.innerHTML = '<div class="dart-error">회사명을 입력해주세요.</div>';
+                return;
+            }
+
+            // 회사 찾기
+            let company = dartSelectedCompany;
+            if (!company) {
+                try {
+                    const searchResponse = await fetch(`${DART_API_BASE_URL}/search?query=${encodeURIComponent(companyName)}`);
+                    const companies = await searchResponse.json();
+                    if (companies.length > 0) {
+                        company = { name: companies[0].corp_name, code: companies[0].corp_code, stock: companies[0].stock_code };
+                    } else {
+                        resultsDiv.innerHTML = '<div class="dart-error">❌ 해당 회사를 찾을 수 없습니다. 자동완성 목록에서 선택해주세요.</div>';
+                        return;
+                    }
+                } catch (error) {
+                    resultsDiv.innerHTML = '<div class="dart-error">❌ 회사 검색 중 오류가 발생했습니다.</div>';
+                    return;
+                }
+            }
+
+            // 로딩 상태
+            searchBtn.disabled = true;
+            searchBtn.textContent = '검색 중...';
+            resultsDiv.innerHTML = '<div class="dart-loading">실제 DART API에서 기업개황 정보를 조회하고 있습니다...</div>';
+
+            try {
+                // 실제 DART API 호출
+                const response = await fetch(`${DART_API_BASE_URL}/company?corp_code=${company.code}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '회사 정보 조회 실패');
+                }
+
+                const data = await response.json();
+                displayDartCompanyOverview(data);
+
+            } catch (error) {
+                console.error('검색 오류:', error);
+                resultsDiv.innerHTML = `<div class="dart-error">검색 중 오류가 발생했습니다: ${error.message}</div>`;
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = '🔍 검색';
+                dartSelectedCompany = null;
+            }
+        }
+
+        // 기업개황 정보 표시 (실제 DART API 데이터)
+        function displayDartCompanyOverview(data) {
+            const resultsDiv = document.getElementById('dartResults');
+            
+            const html = `
+                <div class="dart-company-overview">
+                    <div class="dart-company-title">
+                        <div>
+                            <div class="dart-company-name">${data.corp_name || '정보 없음'}</div>
+                            ${data.corp_name_eng ? `<div class="dart-company-name-eng">${data.corp_name_eng}</div>` : ''}
+                        </div>
+                        <div class="dart-stock-info">
+                            ${data.stock_code ? `<div class="dart-stock-code">${data.stock_code}</div>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="dart-company-details">
+                        <div class="dart-detail-group">
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">회사명</div>
+                                <div class="dart-detail-value">${data.corp_name || '정보 없음'}</div>
+                            </div>
+                            ${data.corp_name_eng ? `
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">영문명</div>
+                                <div class="dart-detail-value">${data.corp_name_eng}</div>
+                            </div>
+                            ` : ''}
+                            ${data.stock_code ? `
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">종목코드</div>
+                                <div class="dart-detail-value">${data.stock_code}</div>
+                            </div>
+                            ` : ''}
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">대표자명</div>
+                                <div class="dart-detail-value">${data.ceo_nm || '정보 없음'}</div>
+                            </div>
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">법인구분</div>
+                                <div class="dart-detail-value">${data.corp_cls || '정보 없음'}</div>
+                            </div>
+                        </div>
+
+                        <div class="dart-detail-group">
+                            ${data.jurir_no ? `
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">법인등록번호</div>
+                                <div class="dart-detail-value">${data.jurir_no}</div>
+                            </div>
+                            ` : ''}
+                            ${data.bizr_no ? `
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">사업자등록번호</div>
+                                <div class="dart-detail-value">${data.bizr_no}</div>
+                            </div>
+                            ` : ''}
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">주소</div>
+                                <div class="dart-detail-value">${data.adres || '정보 없음'}</div>
+                            </div>
+                            ${data.hm_url ? `
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">홈페이지</div>
+                                <div class="dart-detail-value">
+                                    <a href="${data.hm_url.startsWith('http') ? data.hm_url : 'http://' + data.hm_url}" target="_blank">${data.hm_url}</a>
+                                </div>
+                            </div>
+                            ` : ''}
+                            ${data.ir_url ? `
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">IR홈페이지</div>
+                                <div class="dart-detail-value">
+                                    <a href="${data.ir_url.startsWith('http') ? data.ir_url : 'http://' + data.ir_url}" target="_blank">${data.ir_url}</a>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="dart-detail-group">
+                            ${data.phn_no ? `
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">전화번호</div>
+                                <div class="dart-detail-value">${data.phn_no}</div>
+                            </div>
+                            ` : ''}
+                            ${data.fax_no ? `
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">팩스번호</div>
+                                <div class="dart-detail-value">${data.fax_no}</div>
+                            </div>
+                            ` : ''}
+                            ${data.induty_code ? `
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">업종명</div>
+                                <div class="dart-detail-value">${data.induty_code}</div>
+                            </div>
+                            ` : ''}
+                            ${data.est_dt ? `
+                            <div class="dart-detail-item">
+                                <div class="dart-detail-label">설립일</div>
+                                <div class="dart-detail-value">${data.est_dt}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // 외부 클릭시 자동완성 숨기기
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dart-search-container-inner')) {
+                hideDartSuggestions();
+            }
+        });
+    </script>
+</body>
+</html>
