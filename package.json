@@ -1,0 +1,17 @@
+{
+  "name": "dart-api-server",
+  "version": "1.0.0",
+  "description": "DART API를 위한 Netlify Functions",
+  "main": "index.js",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build step required'"
+  },
+  "keywords": ["dart", "api", "netlify", "functions"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}
