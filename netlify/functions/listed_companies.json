@@ -1,0 +1,31 @@
+{
+  "name": "dart-company-search",
+  "version": "1.0.0",
+  "description": "DART API를 활용한 기업개황 검색 서비스",
+  "main": "index.js",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build step required'",
+    "start": "netlify dev"
+  },
+  "keywords": [
+    "dart",
+    "api", 
+    "netlify",
+    "functions",
+    "korea",
+    "stock",
+    "company"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "xmldom": "^0.6.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
