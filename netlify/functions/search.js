@@ -39,7 +39,7 @@ exports.handler = async (event, context) => {
     }
 
     // DART API URL - 네이버 corp_code로 테스트 (00593624)
-    const url = `https://opendart.fss.or.kr/api/company.json?crtfc_key=${apiKey}&corp_code=00593624`;
+    const url = `https://opendart.fss.or.kr/api/company.json?crtfc_key=${apiKey}&corp_code=00126380`;
     console.log('요청 URL:', url.replace(apiKey, 'API_KEY_HIDDEN')); // 디버깅용 (키는 숨김)
     
     // DART API 호출
