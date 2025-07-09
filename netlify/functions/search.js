@@ -17,6 +17,8 @@ exports.handler = async (event, context) => {
   try {
     const { query } = event.queryStringParameters || {};
     
+    console.log('검색 요청:', query); // 디버깅용
+    
     if (!query) {
       return {
         statusCode: 400,
@@ -26,6 +28,8 @@ exports.handler = async (event, context) => {
     }
 
     const apiKey = process.env.DART_API_KEY;
+    console.log('API 키 존재 여부:', !!apiKey); // 디버깅용
+    
     if (!apiKey) {
       return {
         statusCode: 500,
@@ -36,33 +40,54 @@ exports.handler = async (event, context) => {
 
     // DART API URL
     const url = `https://opendart.fss.or.kr/api/company.json?crtfc_key=${apiKey}&corp_name=${encodeURIComponent(query)}`;
+    console.log('요청 URL:', url.replace(apiKey, 'API_KEY_HIDDEN')); // 디버깅용 (키는 숨김)
     
     // DART API 호출
     const data = await new Promise((resolve, reject) => {
       https.get(url, (res) => {
         let responseData = '';
+        
+        console.log('응답 상태 코드:', res.statusCode);
+        console.log('응답 헤더:', res.headers);
+        
         res.on('data', chunk => responseData += chunk);
         res.on('end', () => {
+          console.log('원본 응답 데이터:', responseData); // 디버깅용
+          
           try {
+            if (!responseData.trim()) {
+              reject(new Error('빈 응답을 받았습니다'));
+              return;
+            }
+            
             const jsonData = JSON.parse(responseData);
+            console.log('파싱된 JSON:', jsonData); // 디버깅용
             resolve(jsonData);
+            
           } catch (error) {
-            reject(new Error('API 응답 파싱 실패'));
+            console.error('JSON 파싱 실패:', error);
+            console.error('원본 응답 (처음 200자):', responseData.substring(0, 200));
+            reject(new Error(`API 응답 파싱 실패: ${error.message}. 응답: ${responseData.substring(0, 100)}`));
           }
         });
       }).on('error', (error) => {
+        console.error('HTTPS 요청 실패:', error);
         reject(new Error('DART API 호출 실패: ' + error.message));
       });
     });
 
+    console.log('DART API 응답 상태:', data.status); // 디버깅용
+
     // 응답 처리
     if (data.status === '000') {
+      console.log('성공적인 응답, 결과 개수:', data.list ? data.list.length : 0);
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify(data.list || [])
       };
     } else {
+      console.log('DART API 에러:', data.status, data.message);
       return {
         statusCode: 400,
         headers,
@@ -71,7 +96,7 @@ exports.handler = async (event, context) => {
     }
 
   } catch (error) {
-    console.error('Search function error:', error);
+    console.error('전체 함수 에러:', error);
     return {
       statusCode: 500,
       headers,
