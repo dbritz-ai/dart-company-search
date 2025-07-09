@@ -1,37 +1,4 @@
-// netlify/functions/search.js - 정석 구조 (CSV 회사목록 기반)
-const fs = require('fs');
-const path = require('path');
-
-// 메모리 캐시
-let companyList = null;
-
-function loadCompanyList() {
-  if (companyList) return companyList;
-  
-  try {
-    const csvPath = path.join(__dirname, 'corp_list.csv');
-    const csvContent = fs.readFileSync(csvPath, 'utf-8');
-    
-    // CSV 파싱 (헤더 제외)
-    companyList = csvContent.trim().split('\n').slice(1).map(line => {
-      const [corp_code, corp_name, stock_code] = line.split(',').map(x => x.trim());
-      return { corp_code, corp_name, stock_code };
-    }).filter(c => c.corp_code && c.corp_name);
-    
-    console.log(`회사목록 로드: ${companyList.length}개`);
-    return companyList;
-    
-  } catch (error) {
-    console.error('CSV 로드 실패:', error);
-    // fallback
-    return [
-      { corp_code: "00126380", corp_name: "삼성전자", stock_code: "005930" },
-      { corp_code: "00262701", corp_name: "카카오", stock_code: "035720" },
-      { corp_code: "00120182", corp_name: "네이버", stock_code: "035420" }
-    ];
-  }
-}
-
+// netlify/functions/search.js - DART API로 진짜 모든 회사 검색
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -44,20 +11,71 @@ exports.handler = async (event) => {
   }
 
   const { query } = event.queryStringParameters || {};
-  if (!query) {
+  if (!query || query.length < 2) {
     return { statusCode: 200, headers, body: JSON.stringify([]) };
   }
 
-  const companies = loadCompanyList();
-  
-  // 회사명 또는 종목코드로 검색
-  const results = companies.filter(c =>
-    c.corp_name.includes(query) || (c.stock_code && c.stock_code.includes(query))
-  ).slice(0, 20);
+  const apiKey = process.env.DART_API_KEY;
+  if (!apiKey) {
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'API 키 없음' }) };
+  }
 
-  return {
-    statusCode: 200,
-    headers,
-    body: JSON.stringify(results)
-  };
+  try {
+    // DART 공시검색 API로 회사 찾기
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10).replace(/-/g, '');
+    
+    const url = `https://opendart.fss.or.kr/api/list.json?crtfc_key=${apiKey}&bgn_de=${oneMonthAgo}&end_de=${today}&page_count=50`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.status === '000' && data.list) {
+      // 검색어와 매칭되는 회사들 필터링
+      const companies = [];
+      const seen = new Set();
+      
+      for (const item of data.list) {
+        if (item.corp_name && item.corp_name.includes(query)) {
+          const key = item.corp_code;
+          if (!seen.has(key)) {
+            seen.add(key);
+            companies.push({
+              corp_code: item.corp_code,
+              corp_name: item.corp_name,
+              stock_code: item.stock_code || ''
+            });
+            if (companies.length >= 20) break;
+          }
+        }
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(companies)
+      };
+    } else {
+      // API 에러시 주요 회사 fallback
+      const fallback = [
+        { corp_code: "00126380", corp_name: "삼성전자", stock_code: "005930" },
+        { corp_code: "00262701", corp_name: "카카오", stock_code: "035720" },
+        { corp_code: "00120182", corp_name: "네이버", stock_code: "035420" }
+      ].filter(c => c.corp_name.includes(query));
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(fallback)
+      };
+    }
+    
+  } catch (error) {
+    console.error('검색 에러:', error);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: error.message })
+    };
+  }
 };
