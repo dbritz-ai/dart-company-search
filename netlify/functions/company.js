@@ -1,4 +1,4 @@
-// netlify/functions/company.js - 정석 구조 (단순 DART API)
+// netlify/functions/company.js - DART API 직접 호출
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -11,6 +11,8 @@ exports.handler = async (event) => {
   }
 
   const { corp_code } = event.queryStringParameters || {};
+  const apiKey = process.env.DART_API_KEY;
+
   if (!corp_code) {
     return { 
       statusCode: 400, 
@@ -19,25 +21,24 @@ exports.handler = async (event) => {
     };
   }
 
-  const apiKey = process.env.DART_API_KEY;
   if (!apiKey) {
     return { 
       statusCode: 500, 
       headers, 
-      body: JSON.stringify({ error: 'DART_API_KEY 환경변수가 없습니다' }) 
+      body: JSON.stringify({ error: 'DART_API_KEY 환경변수가 설정되지 않았습니다' }) 
     };
   }
 
   try {
-    // 정석: DART 기업개황 API 직접 호출
     const url = `https://opendart.fss.or.kr/api/company.json?crtfc_key=${apiKey}&corp_code=${corp_code}`;
+    
+    console.log(`기업개황 조회: ${corp_code}`);
     
     const response = await fetch(url);
     const data = await response.json();
     
-    console.log(`DART API 응답 (${corp_code}):`, data.status, data.message);
+    console.log(`DART API 응답: status=${data.status}, message=${data.message}`);
 
-    // DART API 응답 그대로 반환
     return {
       statusCode: 200,
       headers,
