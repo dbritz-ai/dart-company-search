@@ -38,8 +38,8 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // DART API URL
-    const url = `https://opendart.fss.or.kr/api/company.json?crtfc_key=${apiKey}&corp_name=${encodeURIComponent(query)}`;
+    // DART API URL - 임시로 삼성전자 corp_code 사용 (테스트용)
+    const url = `https://opendart.fss.or.kr/api/company.json?crtfc_key=${apiKey}&corp_code=00126380`;
     console.log('요청 URL:', url.replace(apiKey, 'API_KEY_HIDDEN')); // 디버깅용 (키는 숨김)
     
     // DART API 호출
@@ -80,11 +80,16 @@ exports.handler = async (event, context) => {
 
     // 응답 처리
     if (data.status === '000') {
-      console.log('성공적인 응답, 결과 개수:', data.list ? data.list.length : 0);
+      console.log('성공적인 응답');
+      // 단일 회사 정보를 배열로 반환 (기존 구조 유지)
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(data.list || [])
+        body: JSON.stringify([{
+          corp_name: data.corp_name,
+          corp_code: '00126380',
+          stock_code: data.stock_code
+        }])
       };
     } else {
       console.log('DART API 에러:', data.status, data.message);
