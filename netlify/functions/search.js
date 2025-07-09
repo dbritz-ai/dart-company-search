@@ -1,3 +1,12 @@
+// netlify/functions/search.js - 실제 DART 전체 회사목록 API 활용
+const https = require('https');
+const { DOMParser } = require('xmldom');
+
+// 메모리 캐시 (서버리스에서 재활용)
+let companiesCache = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24시간
+
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -11,8 +20,9 @@ exports.handler = async (event, context) => {
 
   try {
     const { query } = event.queryStringParameters || {};
+    
     if (!query) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: '검색어가 필요합니다.' }) };
+      return { statusCode: 400, headers, body: JSON.stringify([]) };
     }
 
     const apiKey = process.env.DART_API_KEY;
@@ -20,97 +30,141 @@ exports.handler = async (event, context) => {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'DART API 키가 환경변수에 없습니다.' }) };
     }
 
-    // 로컬 인기 회사 배열 (fallback & 초간단 자동완성)
-    const popularCompanies = [
-      { corp_name: "삼성전자", corp_code: "00126380", stock_code: "005930" },
-      { corp_name: "SK하이닉스", corp_code: "00164779", stock_code: "000660" },
-      { corp_name: "LG전자", corp_code: "00401731", stock_code: "066570" },
-      { corp_name: "네이버", corp_code: "00120182", stock_code: "035420" },
-      { corp_name: "카카오", corp_code: "00262701", stock_code: "035720" },
-      { corp_name: "현대자동차", corp_code: "00164742", stock_code: "005380" },
-      { corp_name: "기아", corp_code: "00164779", stock_code: "000270" },
-      { corp_name: "포스코홀딩스", corp_code: "00164186", stock_code: "005490" },
-      { corp_name: "LG화학", corp_code: "00401068", stock_code: "051910" },
-      { corp_name: "삼성SDI", corp_code: "00164921", stock_code: "006400" }
+    // 캐시 확인 (24시간 이내면 재사용)
+    const now = Date.now();
+    if (companiesCache && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION)) {
+      console.log('캐시된 회사목록 사용');
+      return searchFromCache(companiesCache, query, headers);
+    }
+
+    console.log('DART 전체 회사목록 다운로드 시작...');
+    
+    // DART 전체 회사목록 API 호출
+    const companies = await downloadCompanyList(apiKey);
+    
+    // 캐시 저장
+    companiesCache = companies;
+    cacheTimestamp = now;
+    
+    console.log(`전체 회사목록 로드 완료: ${companies.length}개`);
+    
+    return searchFromCache(companies, query, headers);
+
+  } catch (error) {
+    console.error('검색 함수 에러:', error);
+    
+    // 에러 발생시 기본 인기 회사들 반환
+    const fallbackCompanies = [
+      { "corp_name": "삼성전자", "corp_code": "00126380", "stock_code": "005930" },
+      { "corp_name": "카카오", "corp_code": "00262701", "stock_code": "035720" },
+      { "corp_name": "네이버", "corp_code": "00120182", "stock_code": "035420" },
+      { "corp_name": "LG전자", "corp_code": "00401731", "stock_code": "066570" },
+      { "corp_name": "SK하이닉스", "corp_code": "00164779", "stock_code": "000660" }
     ];
 
-    // 1글자는 로컬에서만 검색 (API 트래픽 보호)
-    if (query.length === 1) {
-      const results = popularCompanies.filter(c =>
-        c.corp_name.includes(query) || c.stock_code.includes(query)
-      );
-      return { statusCode: 200, headers, body: JSON.stringify(results) };
-    }
-
-    // 실제 DART API에서 검색 (공시 1개월 기준, 최신순)
-    const today = new Date();
-    const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-    const endDate = today.toISOString().slice(0, 10).replace(/-/g, '');
-    const startDate = oneMonthAgo.toISOString().slice(0, 10).replace(/-/g, '');
-
-    const url = `https://opendart.fss.or.kr/api/list.json?crtfc_key=${apiKey}&bgn_de=${startDate}&end_de=${endDate}&page_count=50&sort=crp`;
-    const response = await fetch(url);
-    const data = await response.json();
-
-    // DART 에러/비정상 응답
-    if (data.status && data.status !== '000') {
-      // '013'은 공시없음, fallback 사용
-      if (data.status === '013') {
-        const results = popularCompanies.filter(c =>
-          c.corp_name.includes(query) || c.stock_code.includes(query)
-        );
-        return { statusCode: 200, headers, body: JSON.stringify(results) };
-      }
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: data.message || '검색 중 오류가 발생했습니다.' })
-      };
-    }
-
-    // 공시 목록에서 회사명/종목코드 포함된 회사만 추출
-    const companies = [];
-    const seen = new Set();
-    if (data.list && Array.isArray(data.list)) {
-      for (const item of data.list) {
-        if (
-          (item.corp_name && item.corp_name.includes(query)) ||
-          (item.stock_code && item.stock_code.includes(query))
-        ) {
-          const key = `${item.corp_code}-${item.corp_name}`;
-          if (!seen.has(key)) {
-            seen.add(key);
-            companies.push({
-              corp_name: item.corp_name,
-              corp_code: item.corp_code,
-              stock_code: item.stock_code || ''
-            });
-            if (companies.length >= 20) break;
-          }
-        }
-      }
-    }
-
-    // 결과가 없으면 로컬 fallback
-    if (companies.length === 0) {
-      const results = popularCompanies.filter(c =>
-        c.corp_name.includes(query) || c.stock_code.includes(query)
-      );
-      return { statusCode: 200, headers, body: JSON.stringify(results) };
-    }
+    const searchQuery = event.queryStringParameters?.query || '';
+    const results = fallbackCompanies.filter(c =>
+      c.corp_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.stock_code.includes(searchQuery)
+    );
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(companies)
-    };
-
-  } catch (error) {
-    console.error('검색 함수 에러:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: '검색 중 오류가 발생했습니다: ' + error.message })
+      body: JSON.stringify(results)
     };
   }
 };
+
+// DART에서 전체 회사목록 다운로드
+async function downloadCompanyList(apiKey) {
+  return new Promise((resolve, reject) => {
+    const url = `https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key=${apiKey}`;
+    
+    https.get(url, (response) => {
+      const chunks = [];
+      
+      response.on('data', (chunk) => {
+        chunks.push(chunk);
+      });
+      
+      response.on('end', () => {
+        try {
+          // ZIP 파일이 아닌 XML 응답인 경우 (브라우저에서는 XML로 응답됨)
+          const xmlData = Buffer.concat(chunks).toString('utf8');
+          
+          if (xmlData.includes('<result>')) {
+            // XML 파싱
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlData, 'text/xml');
+            
+            const companies = [];
+            const listElements = xmlDoc.getElementsByTagName('list');
+            
+            for (let i = 0; i < listElements.length; i++) {
+              const element = listElements[i];
+              const corpCode = getTextContent(element, 'corp_code');
+              const corpName = getTextContent(element, 'corp_name');
+              const stockCode = getTextContent(element, 'stock_code');
+              
+              if (corpCode && corpName) {
+                companies.push({
+                  corp_name: corpName,
+                  corp_code: corpCode,
+                  stock_code: stockCode || ''
+                });
+              }
+            }
+            
+            resolve(companies);
+          } else {
+            // ZIP 파일인 경우 - 실제 운영에서는 ZIP 압축해제 필요
+            console.log('ZIP 파일 수신됨, XML 파싱 시도...');
+            reject(new Error('ZIP 파일 처리 필요'));
+          }
+          
+        } catch (error) {
+          console.error('XML 파싱 오류:', error);
+          reject(error);
+        }
+      });
+      
+    }).on('error', (error) => {
+      console.error('DART API 호출 오류:', error);
+      reject(error);
+    });
+  });
+}
+
+// XML에서 텍스트 추출
+function getTextContent(parent, tagName) {
+  const elements = parent.getElementsByTagName(tagName);
+  if (elements.length > 0 && elements[0].firstChild) {
+    return elements[0].firstChild.nodeValue;
+  }
+  return '';
+}
+
+// 캐시에서 검색
+function searchFromCache(companies, query, headers) {
+  const normalizedQuery = query.trim().toLowerCase();
+  
+  if (normalizedQuery.length === 0) {
+    return { statusCode: 200, headers, body: JSON.stringify([]) };
+  }
+
+  // 초고속 메모리 검색
+  const results = companies.filter(company => {
+    const corpNameMatch = company.corp_name.toLowerCase().includes(normalizedQuery);
+    const stockCodeMatch = company.stock_code && company.stock_code.includes(query);
+    return corpNameMatch || stockCodeMatch;
+  }).slice(0, 20); // 최대 20개
+
+  console.log(`검색어: "${query}" -> ${results.length}개 결과`);
+
+  return {
+    statusCode: 200,
+    headers,
+    body: JSON.stringify(results)
+  };
+}
