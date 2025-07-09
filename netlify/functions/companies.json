@@ -1,0 +1,290 @@
+[
+  {
+    "corp_code": "00126380",
+    "corp_name": "삼성전자",
+    "stock_code": "005930",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00262701",
+    "corp_name": "카카오",
+    "stock_code": "035720",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00120182",
+    "corp_name": "네이버",
+    "stock_code": "035420",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00401731",
+    "corp_name": "LG전자",
+    "stock_code": "066570",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164779",
+    "corp_name": "SK하이닉스",
+    "stock_code": "000660",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164742",
+    "corp_name": "현대자동차",
+    "stock_code": "005380",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164779",
+    "corp_name": "기아",
+    "stock_code": "000270",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164186",
+    "corp_name": "포스코홀딩스",
+    "stock_code": "005490",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00401068",
+    "corp_name": "LG화학",
+    "stock_code": "051910",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164921",
+    "corp_name": "삼성SDI",
+    "stock_code": "006400",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00413046",
+    "corp_name": "삼성바이오로직스",
+    "stock_code": "207940",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00530847",
+    "corp_name": "LG에너지솔루션",
+    "stock_code": "373220",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164802",
+    "corp_name": "현대모비스",
+    "stock_code": "012330",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00119171",
+    "corp_name": "KB금융",
+    "stock_code": "105560",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00212560",
+    "corp_name": "신한지주",
+    "stock_code": "055550",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164264",
+    "corp_name": "하나금융지주",
+    "stock_code": "086790",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00119074",
+    "corp_name": "삼성생명보험",
+    "stock_code": "032830",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00401187",
+    "corp_name": "LG생활건강",
+    "stock_code": "051900",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164802",
+    "corp_name": "SK텔레콤",
+    "stock_code": "017670",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164264",
+    "corp_name": "KT",
+    "stock_code": "030200",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164186",
+    "corp_name": "롯데케미칼",
+    "stock_code": "011170",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164742",
+    "corp_name": "현대중공업",
+    "stock_code": "009540",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164921",
+    "corp_name": "두산에너빌리티",
+    "stock_code": "034020",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164779",
+    "corp_name": "SK이노베이션",
+    "stock_code": "096770",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00401731",
+    "corp_name": "LG디스플레이",
+    "stock_code": "034220",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00126380",
+    "corp_name": "삼성중공업",
+    "stock_code": "010140",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164186",
+    "corp_name": "포스코케미칼",
+    "stock_code": "003670",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164264",
+    "corp_name": "한국전력공사",
+    "stock_code": "015760",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164779",
+    "corp_name": "SK바이오사이언스",
+    "stock_code": "302440",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00262701",
+    "corp_name": "카카오뱅크",
+    "stock_code": "323410",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00120182",
+    "corp_name": "크래프톤",
+    "stock_code": "259960",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164921",
+    "corp_name": "셀트리온",
+    "stock_code": "068270",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164742",
+    "corp_name": "한미반도체",
+    "stock_code": "042700",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00401068",
+    "corp_name": "에코프로비엠",
+    "stock_code": "247540",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00126380",
+    "corp_name": "삼성전기",
+    "stock_code": "009150",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00401731",
+    "corp_name": "LG유플러스",
+    "stock_code": "032640",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164921",
+    "corp_name": "두산밥캣",
+    "stock_code": "241560",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164742",
+    "corp_name": "HD현대중공업",
+    "stock_code": "329180",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164779",
+    "corp_name": "SK스퀘어",
+    "stock_code": "402340",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00120182",
+    "corp_name": "하이브",
+    "stock_code": "352820",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164264",
+    "corp_name": "엔씨소프트",
+    "stock_code": "036570",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164186",
+    "corp_name": "한화솔루션",
+    "stock_code": "009830",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00119171",
+    "corp_name": "메리츠금융지주",
+    "stock_code": "138040",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00262701",
+    "corp_name": "넷마블",
+    "stock_code": "251270",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164264",
+    "corp_name": "KT&G",
+    "stock_code": "033780",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164779",
+    "corp_name": "S-Oil",
+    "stock_code": "010950",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164186",
+    "corp_name": "GS건설",
+    "stock_code": "006360",
+    "modify_date": "20231201"
+  },
+  {
+    "corp_code": "00164921",
+    "corp_name": "아모레퍼시픽",
+    "stock_code": "090430",
+    "modify_date": "20231201"
+  }
+]
